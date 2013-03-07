@@ -45,6 +45,8 @@ class Manufacturer(Entity):
 				self.vendors = []
 				for v in attr:
 					self.vendors.append(Vendor(v))
+			elif attr.tag == 'id':
+				setattr(self, attr.tag, int(attr.text))
 			else:
 				setattr(self, attr.tag, attr.text)
 
@@ -59,6 +61,8 @@ class Vendor(Entity):
 				self.manufacturers = []
 				for m in attr:
 					self.manufacturers.append(Manufacturer(m))
+			elif attr.tag == 'id':
+				setattr(self, attr.tag, int(attr.text))
 			else:
 				setattr(self, attr.tag, attr.text)
 
@@ -69,8 +73,10 @@ class Contact(Entity):
 		Initialise a Contact from an ElementTree
 		'''
 		for attr in et:
-			setattr(self, attr.tag, attr.text)
-		return o
+			if attr.tag == 'id':
+				setattr(self, attr.tag, int(attr.text))
+			else:
+				setattr(self, attr.tag, attr.text)
 
 
 class API:
