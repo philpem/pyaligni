@@ -2,7 +2,7 @@ import os, requests
 import xml.etree.ElementTree as ET
 
 # from http://www.devx.com/opensource/Article/33153
-def __pretty_dump(e, ind=''):
+def _pretty_dump(e, ind=''):
 	# start with indentation
 	s = ind
 	# put tag (don't close it just yet)
@@ -20,7 +20,7 @@ def __pretty_dump(e, ind=''):
 			s += '>'
 			# add every child in its own line indented
 			for child in e:
-				s += os.linesep + __pretty_dump(child, ind + '  ')
+				s += os.linesep + _pretty_dump(child, ind + '  ')
 			# add closing tag in a new line
 			s += os.linesep + ind + '</' + e.tag + '>'
 		else:
@@ -36,13 +36,42 @@ class Entity:
 		return str(self.__dict__)
 
 class Manufacturer(Entity):
-	pass
+	def __init__(self, et):
+		'''
+		Initialise a Manufacturer from an ElementTree
+		'''
+		for attr in et:
+			if attr.tag == 'vendors':
+				self.vendors = []
+				for v in attr:
+					self.vendors.append(Vendor(v))
+			else:
+				setattr(self, attr.tag, attr.text)
+
 
 class Vendor(Entity):
-	pass
+	def __init__(self, et):
+		'''
+		Initialise a Vendor from an ElementTree
+		'''
+		for attr in et:
+			if attr.tag == 'manufacturers':
+				self.manufacturers = []
+				for m in attr:
+					self.manufacturers.append(Manufacturer(m))
+			else:
+				setattr(self, attr.tag, attr.text)
+
 
 class Contact(Entity):
-	pass
+	def __init__(self, et):
+		'''
+		Initialise a Contact from an ElementTree
+		'''
+		for attr in et:
+			setattr(self, attr.tag, attr.text)
+		return o
+
 
 class API:
 	''' Aligni API handler for Python '''
@@ -58,6 +87,51 @@ class API:
 		r = self.session.get("http://%s.aligni.com/api/%s/%s" % (self.sitename, self.apikey, endpoint))
 		return ET.fromstring(r.text)
 
+
+	def get_manufacturer(self, mid=None):
+		'''
+		Get a manufacturer or list of manufacturers from the Aligni API
+		'''
+		if mid is None:
+			resp = self.__requ('manufacturer/')
+		else:
+			resp = self.__requ('manufacturer/%d' % mid)
+
+		# Parse the response
+		rval = list()
+		if resp.tag == 'manufacturers':
+			# More than one manufacturer returned
+			for manufacturerInfo in resp:
+				rval.append(Manufacturer(manufacturerInfo))
+		else:
+			# One manufacturer returned
+			rval.append(Manufacturer(resp))
+
+		return rval
+
+
+	def get_vendor(self, mid=None):
+		'''
+		Get a vendor or list of vendors from the Aligni API
+		'''
+		if mid is None:
+			resp = self.__requ('vendor/')
+		else:
+			resp = self.__requ('vendor/%d' % mid)
+
+		# Parse the response
+		rval = list()
+		if resp.tag == 'vendors':
+			# More than one vendor returned
+			for vendorInfo in resp:
+				rval.append(Vendor(vendorInfo))
+		else:
+			# One vendor returned
+			rval.append(Vendor(resp))
+
+		return rval
+
+
 	def get_contact(self, cid=None):
 		'''
 		Get a contact or list of contacts from the Aligni API
@@ -69,14 +143,6 @@ class API:
 		When 'cid' is specified, an single, complete contact record
 		containing the full details of the contact will be returned.
 		'''
-
-		def __parse_contact(et):
-			o = Contact()
-			for attr in et:
-				setattr(o, attr.tag, attr.text)
-			return o
-
-
 		if cid is None:
 			resp = self.__requ('contact/')
 		else:
@@ -87,10 +153,10 @@ class API:
 		if resp.tag == 'contacts':
 			# More than one contact returned
 			for contactInfo in resp:
-				rval.append(__parse_contact(contactInfo))
+				rval.append(Contact(contactInfo))
 		else:
 			# One contact returned
-			rval.append(__parse_contact(resp))
+			rval.append(Contact(resp))
 
 		return rval
 
