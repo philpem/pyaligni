@@ -185,8 +185,8 @@ class API:
 
 	def __requ(self, endpoint):
 		r = self.session.get("http://%s.aligni.com/api/%s/%s" % (self.sitename, self.apikey, endpoint))
-		with open("log","wt") as f:
-			f.write(r.text)
+		#with open("log","wt") as f:
+		#	f.write(r.text)
 		return ET.fromstring(r.text)
 
 	def get_manufacturer(self, mid=None):
