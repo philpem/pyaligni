@@ -29,12 +29,14 @@ def _pretty_dump(e, ind=''):
 	return s
 
 class Entity:
+	int_params = ['id']
+
 	def __init__(self, et):
 		'''
 		Initialise a default Entity from an ElementTree
 		'''
 		for attr in et:
-			if attr.tag == 'id':
+			if attr.tag in self.int_params:
 				setattr(self, attr.tag, int(attr.text))
 			else:
 				setattr(self, attr.tag, attr.text)
@@ -52,7 +54,7 @@ class Manufacturer(Entity):
 				self.vendors = []
 				for v in attr:
 					self.vendors.append(Vendor(v))
-			elif attr.tag == 'id':
+			elif attr.tag in self.int_params:
 				setattr(self, attr.tag, int(attr.text))
 			else:
 				setattr(self, attr.tag, attr.text)
@@ -68,14 +70,14 @@ class Vendor(Entity):
 				self.manufacturers = []
 				for m in attr:
 					self.manufacturers.append(Manufacturer(m))
-			elif attr.tag == 'id':
+			elif attr.tag in self.int_params:
 				setattr(self, attr.tag, int(attr.text))
 			else:
 				setattr(self, attr.tag, attr.text)
 
 
 class Contact(Entity):
-	pass
+	int_params = ['id', 'vendor_id']
 
 
 class PartType(Entity):
@@ -83,24 +85,26 @@ class PartType(Entity):
 
 
 class AlternatePart(Entity):
-	pass
+	int_params = ['part_id', 'quality']
 
 
 class VendorPartNumber(Entity):
-	pass
+	int_params = ['vendor_id']
 
 
 class Quote(Entity):
-	pass
+	int_params = ['quantity_min', 'vendor_id', 'leadtime', 'quantity_mult', 'id']
 
 
 class Part(Entity):
+	int_params = ['id', 'parttype_id', 'manufacturer_id', 'rohs']
+
 	def __init__(self, et):
 		'''
 		Initialise a Part from an ElementTree
 		'''
 		for attr in et:
-			if attr.tag == 'id':
+			if attr.tag in self.int_params:
 				setattr(self, attr.tag, int(attr.text))
 			elif attr.tag == 'alternate_parts':
 				self.alternate_parts = []
