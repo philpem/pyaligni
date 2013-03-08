@@ -146,6 +146,10 @@ class Unit(Entity):
 				setattr(self, attr.tag, attr.text)
 
 
+class InventorySublocation(Entity):
+	int_params = ['id', 'inventory_location_id']
+
+
 class InventoryLocation(Entity):
 	def __init__(self, et):
 		'''
@@ -156,7 +160,7 @@ class InventoryLocation(Entity):
 			if attr.tag in self.int_params:
 				setattr(self, attr.tag, int(attr.text))
 			elif attr.tag == 'inventory_sublocation':
-				self.inventory_sublocations.append(Entity(attr)) #FIXME InventorySublocation
+				self.inventory_sublocations.append(InventorySublocation(attr))
 			else:
 				setattr(self, attr.tag, attr.text)
 
@@ -177,7 +181,6 @@ class API:
 			f.write(r.text)
 		return ET.fromstring(r.text)
 
-
 	def get_manufacturer(self, mid=None):
 		'''
 		Get a manufacturer or list of manufacturers from the Aligni API
@@ -193,12 +196,10 @@ class API:
 			# More than one manufacturer returned
 			for manufacturerInfo in resp:
 				rval.append(Manufacturer(manufacturerInfo))
+			return rval
 		else:
 			# One manufacturer returned
-			rval.append(Manufacturer(resp))
-
-		return rval
-
+			return Manufacturer(resp)
 
 	def get_vendor(self, mid=None):
 		'''
@@ -215,12 +216,10 @@ class API:
 			# More than one vendor returned
 			for vendorInfo in resp:
 				rval.append(Vendor(vendorInfo))
+			return rval
 		else:
 			# One vendor returned
-			rval.append(Vendor(resp))
-
-		return rval
-
+			return Vendor(resp)
 
 	def get_contact(self, cid=None):
 		'''
@@ -244,12 +243,10 @@ class API:
 			# More than one contact returned
 			for contactInfo in resp:
 				rval.append(Contact(contactInfo))
+			return rval
 		else:
 			# One contact returned
-			rval.append(Contact(resp))
-
-		return rval
-
+			return Contact(resp)
 
 	def get_parttype(self, ptid=None):
 		'''
@@ -273,12 +270,10 @@ class API:
 			# More than one parttype returned
 			for parttypeInfo in resp:
 				rval.append(PartType(parttypeInfo))
+			return rval
 		else:
 			# One parttype returned
-			rval.append(PartType(resp))
-
-		return rval
-
+			return PartType(resp)
 
 	def get_part(self, pid=None):
 		'''
@@ -302,12 +297,10 @@ class API:
 			# More than one part returned
 			for partInfo in resp:
 				rval.append(Part(partInfo))
+			return rval
 		else:
 			# One part returned
-			rval.append(Part(resp))
-
-		return rval
-
+			return Part(resp)
 
 	def get_unit(self, uid=None):
 		'''
@@ -331,12 +324,10 @@ class API:
 			# More than one unit returned
 			for unitInfo in resp:
 				rval.append(Unit(unitInfo))
+			return rval
 		else:
 			# One unit returned
-			rval.append(Unit(resp))
-
-		return rval
-
+			return Unit(resp)
 
 	def get_inventory_location(self, ilid=None):
 		'''
@@ -360,9 +351,28 @@ class API:
 			# More than one inventory_location returned
 			for inventory_locationInfo in resp:
 				rval.append(InventoryLocation(inventory_locationInfo))
+			return rval
 		else:
 			# One inventory_location returned
-			rval.append(InventoryLocation(resp))
+			return InventoryLocation(resp)
 
-		return rval
+	def get_inventory_sublocation(self, islid):
+		'''
+		Get a inventory_sublocation or list of inventory_sublocations from the Aligni API
+
+		When 'islid' is specified, an single, complete inventory_sublocation record
+		containing the full details of the inventory_sublocation will be returned.
+		'''
+		resp = self.__requ('inventory_sublocation/%d' % islid)
+
+		# Parse the response
+		rval = list()
+		if resp.tag == 'inventory_sublocations':
+			# More than one inventory_sublocation returned
+			for inventory_sublocationInfo in resp:
+				rval.append(InventorySublocation(inventory_sublocationInfo))
+			return rval
+		else:
+			# One inventory_sublocation returned
+			return InventorySublocation(resp)
 

@@ -7,6 +7,11 @@ if __name__ == '__main__':
 	invlocs = dict()
 	for il in a.get_inventory_location():
 		invloc = a.get_inventory_location(il.id)
+		# get sublocations too
+		subl = invloc.inventory_sublocations
+		invloc.inventory_sublocations = []
+		for isl in subl:
+			invloc.inventory_sublocations.append(a.get_inventory_sublocation(isl.id))
 		invlocs[il.id] = invloc
 		print invloc
 	print
