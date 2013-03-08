@@ -79,6 +79,18 @@ class Contact(Entity):
 				setattr(self, attr.tag, attr.text)
 
 
+class PartType(Entity):
+	def __init__(self, et):
+		'''
+		Initialise a PartType from an ElementTree
+		'''
+		for attr in et:
+			if attr.tag == 'id':
+				setattr(self, attr.tag, int(attr.text))
+			else:
+				setattr(self, attr.tag, attr.text)
+
+
 class API:
 	''' Aligni API handler for Python '''
 
@@ -163,6 +175,35 @@ class API:
 		else:
 			# One contact returned
 			rval.append(Contact(resp))
+
+		return rval
+
+
+	def get_parttype(self, ptid=None):
+		'''
+		Get a parttype or list of parttypes from the Aligni API
+
+		When 'cid' is not specified, a list of parttypes will be returned.
+		Only the 'id', 'firstname', 'lastname' and 'email' fields will
+		contain data.
+
+		When 'cid' is specified, an single, complete parttype record
+		containing the full details of the parttype will be returned.
+		'''
+		if ptid is None:
+			resp = self.__requ('parttype/')
+		else:
+			resp = self.__requ('parttype/%d' % ptid)
+
+		# Parse the response
+		rval = list()
+		if resp.tag == 'parttypes':
+			# More than one parttype returned
+			for parttypeInfo in resp:
+				rval.append(PartType(parttypeInfo))
+		else:
+			# One parttype returned
+			rval.append(PartType(resp))
 
 		return rval
 

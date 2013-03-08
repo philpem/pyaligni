@@ -11,3 +11,7 @@ if __name__ == '__main__':
 
 	c = a.get_contact()
 	print a.get_contact(c[0].id)
+
+	pt = a.get_parttype()
+	print a.get_parttype(pt[0].id)
+
