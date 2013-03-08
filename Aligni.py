@@ -29,8 +29,15 @@ def _pretty_dump(e, ind=''):
 	return s
 
 class Entity:
-	def __init__(self):
-		pass
+	def __init__(self, et):
+		'''
+		Initialise a default Entity from an ElementTree
+		'''
+		for attr in et:
+			if attr.tag == 'id':
+				setattr(self, attr.tag, int(attr.text))
+			else:
+				setattr(self, attr.tag, attr.text)
 
 	def __repr__(self):
 		return str(self.__dict__)
@@ -68,25 +75,49 @@ class Vendor(Entity):
 
 
 class Contact(Entity):
-	def __init__(self, et):
-		'''
-		Initialise a Contact from an ElementTree
-		'''
-		for attr in et:
-			if attr.tag == 'id':
-				setattr(self, attr.tag, int(attr.text))
-			else:
-				setattr(self, attr.tag, attr.text)
+	pass
 
 
 class PartType(Entity):
+	pass
+
+
+class AlternatePart(Entity):
+	pass
+
+
+class VendorPartNumber(Entity):
+	pass
+
+
+class Quote(Entity):
+	pass
+
+
+class Part(Entity):
 	def __init__(self, et):
 		'''
-		Initialise a PartType from an ElementTree
+		Initialise a Part from an ElementTree
 		'''
 		for attr in et:
 			if attr.tag == 'id':
 				setattr(self, attr.tag, int(attr.text))
+			elif attr.tag == 'alternate_parts':
+				self.alternate_parts = []
+				for m in attr:
+					self.alternate_parts.append(AlternatePart(m))
+			elif attr.tag == 'quotes':
+				self.quotes = []
+				for m in attr:
+					self.quotes.append(Quote(m))
+			elif attr.tag == 'custom_parameters':
+				self.custom_parameters = dict()
+				for m in attr:
+					self.custom_parameters[m.tag] = m.text
+			elif attr.tag == 'vendor_part_numbers':
+				self.vendor_part_numbers = []
+				for m in attr:
+					self.vendor_part_numbers.append(VendorPartNumber(m))
 			else:
 				setattr(self, attr.tag, attr.text)
 
@@ -103,6 +134,8 @@ class API:
 
 	def __requ(self, endpoint):
 		r = self.session.get("http://%s.aligni.com/api/%s/%s" % (self.sitename, self.apikey, endpoint))
+		with open("log","wt") as f:
+			f.write(r.text)
 		return ET.fromstring(r.text)
 
 
@@ -183,11 +216,11 @@ class API:
 		'''
 		Get a parttype or list of parttypes from the Aligni API
 
-		When 'cid' is not specified, a list of parttypes will be returned.
+		When 'ptid' is not specified, a list of parttypes will be returned.
 		Only the 'id', 'firstname', 'lastname' and 'email' fields will
 		contain data.
 
-		When 'cid' is specified, an single, complete parttype record
+		When 'ptid' is specified, an single, complete parttype record
 		containing the full details of the parttype will be returned.
 		'''
 		if ptid is None:
@@ -204,6 +237,35 @@ class API:
 		else:
 			# One parttype returned
 			rval.append(PartType(resp))
+
+		return rval
+
+
+	def get_part(self, pid=None):
+		'''
+		Get a part or list of parts from the Aligni API
+
+		When 'pid' is not specified, a list of parts will be returned.
+		Only the 'id', 'firstname', 'lastname' and 'email' fields will
+		contain data.
+
+		When 'pid' is specified, an single, complete part record
+		containing the full details of the part will be returned.
+		'''
+		if pid is None:
+			resp = self.__requ('part/')
+		else:
+			resp = self.__requ('part/%d' % pid)
+
+		# Parse the response
+		rval = list()
+		if resp.tag == 'parts':
+			# More than one part returned
+			for partInfo in resp:
+				rval.append(Part(partInfo))
+		else:
+			# One part returned
+			rval.append(Part(resp))
 
 		return rval
 

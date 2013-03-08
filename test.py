@@ -5,13 +5,21 @@ if __name__ == '__main__':
 
 	m = a.get_manufacturer()
 	print a.get_manufacturer(m[0].id)
+	print
 
 	v = a.get_vendor()
 	print a.get_vendor(v[0].id)
+	print
 
 	c = a.get_contact()
 	print a.get_contact(c[0].id)
+	print
 
 	pt = a.get_parttype()
 	print a.get_parttype(pt[0].id)
+	print
+
+	p = a.get_part()
+	print a.get_part(p[0].id)
+	print
 
