@@ -96,6 +96,10 @@ class Quote(Entity):
 	int_params = ['quantity_min', 'vendor_id', 'leadtime', 'quantity_mult', 'id']
 
 
+class InventoryUnit(Entity):
+	int_params = ['id', 'inventory_sublocation_id', 'quantity']  # FIXME? is inventory_location_id valid?
+
+
 class Part(Entity):
 	int_params = ['id', 'parttype_id', 'manufacturer_id', 'rohs']
 
@@ -122,6 +126,10 @@ class Part(Entity):
 				self.vendor_part_numbers = []
 				for m in attr:
 					self.vendor_part_numbers.append(VendorPartNumber(m))
+			elif attr.tag == 'inventory_units':
+				self.inventory_units = []
+				for m in attr:
+					self.inventory_units.append(InventoryUnit(m))
 			else:
 				setattr(self, attr.tag, attr.text)
 
