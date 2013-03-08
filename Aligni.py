@@ -126,6 +126,26 @@ class Part(Entity):
 				setattr(self, attr.tag, attr.text)
 
 
+class UnitConversion(Entity):
+	int_params = ['id', 'to_unit_id']
+
+
+class Unit(Entity):
+	def __init__(self, et):
+		'''
+		Initialise a default Entity from an ElementTree
+		'''
+		for attr in et:
+			if attr.tag in self.int_params:
+				setattr(self, attr.tag, int(attr.text))
+			elif attr.tag == 'unit_conversions':
+				self.unit_conversions = []
+				for m in attr:
+					self.unit_conversions.append(UnitConversion(m))
+			else:
+				setattr(self, attr.tag, attr.text)
+
+
 class API:
 	''' Aligni API handler for Python '''
 
@@ -270,6 +290,35 @@ class API:
 		else:
 			# One part returned
 			rval.append(Part(resp))
+
+		return rval
+
+
+	def get_unit(self, uid=None):
+		'''
+		Get a unit or list of units from the Aligni API
+
+		When 'uid' is not specified, a list of units will be returned.
+		Only the 'id', 'firstname', 'lastname' and 'email' fields will
+		contain data.
+
+		When 'uid' is specified, an single, complete unit record
+		containing the full details of the unit will be returned.
+		'''
+		if uid is None:
+			resp = self.__requ('unit/')
+		else:
+			resp = self.__requ('unit/%d' % uid)
+
+		# Parse the response
+		rval = list()
+		if resp.tag == 'units':
+			# More than one unit returned
+			for unitInfo in resp:
+				rval.append(Unit(unitInfo))
+		else:
+			# One unit returned
+			rval.append(Unit(resp))
 
 		return rval
 

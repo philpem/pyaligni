@@ -23,3 +23,9 @@ if __name__ == '__main__':
 	print a.get_part(p[0].id)
 	print
 
+	units = dict()
+	for u in a.get_unit():
+		unit = a.get_unit(u.id)
+		units[u.id] = unit
+		print unit
+	print
