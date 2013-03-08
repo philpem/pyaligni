@@ -133,7 +133,7 @@ class UnitConversion(Entity):
 class Unit(Entity):
 	def __init__(self, et):
 		'''
-		Initialise a default Entity from an ElementTree
+		Initialise a Unit from an ElementTree
 		'''
 		for attr in et:
 			if attr.tag in self.int_params:
@@ -142,6 +142,21 @@ class Unit(Entity):
 				self.unit_conversions = []
 				for m in attr:
 					self.unit_conversions.append(UnitConversion(m))
+			else:
+				setattr(self, attr.tag, attr.text)
+
+
+class InventoryLocation(Entity):
+	def __init__(self, et):
+		'''
+		Initialise an InventoryLocation from an ElementTree
+		'''
+		self.inventory_sublocations = []
+		for attr in et:
+			if attr.tag in self.int_params:
+				setattr(self, attr.tag, int(attr.text))
+			elif attr.tag == 'inventory_sublocation':
+				self.inventory_sublocations.append(Entity(attr)) #FIXME InventorySublocation
 			else:
 				setattr(self, attr.tag, attr.text)
 
@@ -319,6 +334,35 @@ class API:
 		else:
 			# One unit returned
 			rval.append(Unit(resp))
+
+		return rval
+
+
+	def get_inventory_location(self, ilid=None):
+		'''
+		Get a inventory_location or list of inventory_locations from the Aligni API
+
+		When 'ilid' is not specified, a list of inventory_locations will be returned.
+		Only the 'id', 'firstname', 'lastname' and 'email' fields will
+		contain data.
+
+		When 'ilid' is specified, an single, complete inventory_location record
+		containing the full details of the inventory_location will be returned.
+		'''
+		if ilid is None:
+			resp = self.__requ('inventory_location/')
+		else:
+			resp = self.__requ('inventory_location/%d' % ilid)
+
+		# Parse the response
+		rval = list()
+		if resp.tag == 'inventory_locations':
+			# More than one inventory_location returned
+			for inventory_locationInfo in resp:
+				rval.append(InventoryLocation(inventory_locationInfo))
+		else:
+			# One inventory_location returned
+			rval.append(InventoryLocation(resp))
 
 		return rval
 
